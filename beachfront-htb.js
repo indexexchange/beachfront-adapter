@@ -314,14 +314,11 @@ function BeachfrontHtb(configs) {
 
     /**
      * This function will render the pixel given.
-     * @param  {string} pixelUrl Tracking pixel img url.
+     * @param {string} pixelUrl Tracking pixel iframe url.
      */
     function __renderPixel(pixelUrl) {
         if (pixelUrl) {
-            Network.img({
-                url: decodeURIComponent(pixelUrl),
-                method: 'GET'
-            });
+            Browser.createHiddenIFrame(pixelUrl);
         }
     }
 
@@ -355,10 +352,15 @@ function BeachfrontHtb(configs) {
          * Use the adResponse variable to extract your bid information and insert it into the
          * bids array. Each element in the bids array should represent a single bid and should
          * match up to a single element from the returnParcel array.
-         *
          */
 
-        var bids = Utilities.isArray(adResponse) ? adResponse : [];
+        var bids = Utilities.isArray(adResponse) ? adResponse.filter(function (bid) {
+            return bid.adm;
+        }) : [];
+
+        var syncs = Utilities.isArray(adResponse) ? adResponse.filter(function (bid) {
+            return bid.sync;
+        }) : [];
 
         /* --------------------------------------------------------------------------------- */
 
@@ -412,14 +414,13 @@ function BeachfrontHtb(configs) {
             * If firing a tracking pixel is not required or the pixel url is part of the adm,
             * leave empty;
             */
-            var pixelUrl = '';
+            var pixelUrl = syncs.length > 0 ? syncs[0].sync : '';
 
             /* --------------------------------------------------------------------------------------- */
 
-            curBid = null;
             if (bidIsPass) {
                 //? if (DEBUG) {
-                Scribe.info(__profile.partnerId + ' returned pass for { id: ' + adResponse.id + ' }.');
+                Scribe.info(__profile.partnerId + ' returned pass for { id: ' + curBid.slot + ' }.');
                 //? }
                 if (__profile.enabledAnalytics.requestTime) {
                     __baseClass._emitStatsEvent(sessionId, 'hs_slot_pass', headerStatsInfo);
