@@ -52,7 +52,7 @@ function getValidResponse(request, creative) {
             h: 90,
             price: 9.55,
             crid: 'crid_1',
-            adm: creative
+            adm: creative || '<div id="1"></div>'
         },
         {
             slot: '2',
@@ -60,7 +60,7 @@ function getValidResponse(request, creative) {
             h: 250,
             price: 9.56,
             crid: 'crid_2',
-            adm: creative
+            adm: creative || '<div id="2"></div>'
         }
     ];
 
