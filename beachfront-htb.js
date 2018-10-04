@@ -64,6 +64,20 @@ function BeachfrontHtb(configs) {
      */
     var __profile;
 
+    /**
+     * Adapter version.
+     *
+     * @private {string}
+     */
+    var __adapterVersion = '1.2';
+
+    /**
+     * Adapter name.
+     *
+     * @private {string}
+     */
+    var __adapterName = 'BFIO_IX';
+
     /* =====================================
      * Functions
      * ---------------------------------- */
@@ -241,8 +255,8 @@ function BeachfrontHtb(configs) {
             deviceOs: __getOsVersion(),
             isMobile: __isMobile() ? 1 : 0,
             dnt: __getDoNotTrack() ? 1 : 0,
-            adapterVersion: '1.0',
-            adapterName: 'BFIO_IX'
+            adapterVersion: __adapterVersion,
+            adapterName: __adapterName
         };
 
         /* ------------------------ Get consent information -------------------------
