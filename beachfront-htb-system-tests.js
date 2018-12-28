@@ -50,7 +50,7 @@ function getValidResponse(request, creative) {
             slot: '1',
             w: 728,
             h: 90,
-            price: 9.55,
+            price: 2.00,
             crid: 'crid_1',
             adm: creative || '<div id="1"></div>'
         },
@@ -58,7 +58,7 @@ function getValidResponse(request, creative) {
             slot: '2',
             w: 300,
             h: 250,
-            price: 9.56,
+            price: 2.00,
             crid: 'crid_2',
             adm: creative || '<div id="2"></div>'
         }
@@ -70,7 +70,7 @@ function getValidResponse(request, creative) {
 function validateTargeting(targetingMap) {
     expect(targetingMap).toEqual(
         jasmine.objectContaining({
-            ix_bft_cpm: jasmine.arrayContaining(['728x90_955', '300x250_955']),
+            ix_bft_cpm: jasmine.arrayContaining(['728x90_200', '300x250_200']),
             ix_bft_id: jasmine.arrayContaining([jasmine.any(String), jasmine.any(String)])
         })
     );
