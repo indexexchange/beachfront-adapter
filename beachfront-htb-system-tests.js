@@ -70,8 +70,8 @@ function getValidResponse(request, creative) {
 function validateTargeting(targetingMap) {
     expect(targetingMap).toEqual(
         jasmine.objectContaining({
-            ix_bft_cpm: jasmine.arrayContaining(['728x90_200', '300x250_200']),
-            ix_bft_id: jasmine.arrayContaining([jasmine.any(String), jasmine.any(String)])
+            ix_bft_cpm: jasmine.arrayWithExactContents(['728x90_200', '300x250_200']),
+            ix_bft_id: jasmine.arrayWithExactContents([jasmine.any(String), jasmine.any(String)])
         })
     );
 }
