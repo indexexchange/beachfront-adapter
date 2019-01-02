@@ -57,7 +57,7 @@ USD
 | gdpr | No | Int | 1 if GDPR applies, 0 otherwise |
 | gdprConsent | No | String | The GDPR encoded consent string |
 
-Ad Slot Parameters <a name="slot-params"></a>
+<a name="slot-params"></a>Ad Slot Parameters
 
 | Key | Required | Type | Description |
 |---|---|---|---|
