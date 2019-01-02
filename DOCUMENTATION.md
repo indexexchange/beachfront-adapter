@@ -42,7 +42,7 @@ USD
 ### Parameters
 | Key | Required | Type | Description |
 |---|---|---|---|
-| slots | Yes | Object[] | The list of ad slot config objects |
+| slots | Yes | Object[] | The list of ad slot config objects. See [Ad Slot Parameters](#slot-params) |
 | page | Yes | String | The full page url |
 | domain | Yes | String | The page hostname |
 | search | Yes | String | The page query params |
@@ -57,10 +57,20 @@ USD
 | gdpr | No | Int | 1 if GDPR applies, 0 otherwise |
 | gdprConsent | No | String | The GDPR encoded consent string |
 
+Ad Slot Parameters <a name="slot-params"></a>
+
+| Key | Required | Type | Description |
+|---|---|---|---|
+| slot | Yes | String | The ad slot name |
+| id | Yes | String | Beachfront exchange ID |
+| bidfloor | Yes | Number | Bid floor |
+| sizes | Yes | Object[] | Ad slot sizes |
+
 ### Example
 ```
 http://display.bfmio.com/prebid_display?cb=4p8ou44g
 ```
+POST Payload
 ```javascript
 {
     "slots": [
