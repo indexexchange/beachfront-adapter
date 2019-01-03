@@ -4,7 +4,7 @@
 |---|---|
 | Consent | Yes |
 | Native Ad Support | No |
-| SafeFrame Support | No  |
+| SafeFrame Support | Yes |
 | PMP Support | No |
 
 ## Browser Compatibility
