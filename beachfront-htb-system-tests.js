@@ -77,7 +77,13 @@ function validateTargeting(targetingMap) {
 }
 
 function getPassResponse() {
-    return JSON.stringify([]);
+    var response = [
+        {
+            sync: '//sync.bfmio.com/sync_iframe?ifpl=5&ifg=1&id=example&gdpr=1&gc=GDPR_CONSENT_STRING&gce=1&cb=123'
+        }
+    ];
+
+    return JSON.stringify(response);
 }
 
 module.exports = {

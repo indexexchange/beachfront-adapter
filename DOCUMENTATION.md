@@ -130,8 +130,13 @@ POST Payload
 ```
 ### Pass Example
 ```
-Returns HTTP status code - 204 No Content
+[
+    {
+        "sync": "\/\/sync.bfmio.com\/sync_iframe?ifpl=5&ifg=1&id=Display+Prebid+Integration+Exchange&gdpr=1&gc=TEST_GDPR_CONSENT_STRING&gce=1&cb=1546528538932"
+    }
+]
 ```
+May return HTTP status code - 204 No Content
 
 ## Configuration Information
 ### Configuration Keys
