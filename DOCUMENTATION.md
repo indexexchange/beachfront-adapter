@@ -17,10 +17,10 @@
 | Internet Explorer 10 | Yes |
 | Internet Explorer 11 | Yes |
 | Safari | Yes |
-| Mobile Chrome | No |
-| Mobile Safari | No |
+| Mobile Chrome | Yes |
+| Mobile Safari | Yes |
 | UC Browser | No |
-| Samsung Internet | No |
+| Samsung Internet | Yes |
 | Opera | Yes |
 
 ## Adapter Information
