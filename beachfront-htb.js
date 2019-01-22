@@ -34,6 +34,15 @@ var Whoopsie = require('whoopsie.js');
  * @class
  */
 function BeachfrontHtb(configs) {
+    /* Beachfront endpoint only works with AJAX */
+    if (!Network.isXhrSupported()) {
+        //? if (DEBUG) {
+        Scribe.warn('Partner Beachfront requires AJAX support. Aborting instantiation.');
+        //? }
+
+        return null;
+    }
+
     /* =====================================
      * Data
      * ---------------------------------- */
@@ -55,12 +64,111 @@ function BeachfrontHtb(configs) {
      */
     var __profile;
 
+    /**
+     * Adapter version.
+     *
+     * @private {string}
+     */
+    var __adapterVersion = '1.2';
+
+    /**
+     * Adapter name.
+     *
+     * @private {string}
+     */
+    var __adapterName = 'BFIO_IX';
+
     /* =====================================
      * Functions
      * ---------------------------------- */
 
     /* Utilities
      * ---------------------------------- */
+
+    function __isMobile() {
+        return (/(ios|ipod|ipad|iphone|android)/i).test(Browser.getUserAgent());
+    }
+
+    function __getDoNotTrack() {
+        var w = Browser.topWindow;
+        var n = w.navigator;
+
+        return n.doNotTrack === '1' || w.doNotTrack === '1' || n.msDoNoTrack === '1' || n.doNotTrack === 'yes';
+    }
+
+    function __getOsVersion() {
+        var ua = Browser.getUserAgent();
+        var clientStrings = [
+            {
+                s: 'Android',
+                r: /Android/
+            },
+            {
+                s: 'iOS',
+                r: /(iPhone|iPad|iPod)/
+            },
+            {
+                s: 'Mac OS X',
+                r: /Mac OS X/
+            },
+            {
+                s: 'Mac OS',
+                r: /(MacPPC|MacIntel|Mac_PowerPC|Macintosh)/
+            },
+            {
+                s: 'Linux',
+                r: /(Linux|X11)/
+            },
+            {
+                s: 'Windows 10',
+                r: /(Windows 10.0|Windows NT 10.0)/
+            },
+            {
+                s: 'Windows 8.1',
+                r: /(Windows 8.1|Windows NT 6.3)/
+            },
+            {
+                s: 'Windows 8',
+                r: /(Windows 8|Windows NT 6.2)/
+            },
+            {
+                s: 'Windows 7',
+                r: /(Windows 7|Windows NT 6.1)/
+            },
+            {
+                s: 'Windows Vista',
+                r: /Windows NT 6.0/
+            },
+            {
+                s: 'Windows XP',
+                r: /(Windows NT 5.1|Windows XP)/
+            },
+            {
+                s: 'UNIX',
+                r: /UNIX/
+            },
+            {
+                s: 'Search Bot',
+                r: /(nuhk|Googlebot|Yammybot|Openbot|Slurp|MSNBot|Ask Jeeves\/Teoma|ia_archiver)/
+            }
+        ];
+
+        for (var i = 0, len = clientStrings.length; i < len; i++) {
+            var cs = clientStrings[i];
+            if (cs.r.test(ua)) {
+                return cs.s;
+            }
+        }
+
+        return 'unknown';
+    }
+
+    function __formatSize(size) {
+        return {
+            w: size[0],
+            h: size[1]
+        };
+    }
 
     /**
      * Generates the request URL and query data to the endpoint for the xSlots
@@ -128,12 +236,28 @@ function BeachfrontHtb(configs) {
          * }
          */
 
-        /* ---------------------- PUT CODE HERE ------------------------------------ */
-        var queryObj = {};
-        var callbackId = System.generateUniqueId();
-
-        /* Change this to your bidder endpoint. */
-        var baseUrl = Browser.getProtocol() + '//someAdapterEndpoint.com/bid';
+        var baseUrl = Browser.getProtocol() + '//display.bfmio.com/prebid_display?cb=' + System.generateUniqueId();
+        var queryObj = {
+            slots: returnParcels.map(function (parcel) {
+                return {
+                    slot: parcel.xSlotName,
+                    id: parcel.xSlotRef.appId,
+                    bidfloor: parcel.xSlotRef.bidfloor,
+                    sizes: parcel.xSlotRef.sizes.map(__formatSize)
+                };
+            }),
+            page: Browser.topWindow.location.href,
+            domain: Browser.topWindow.location.hostname,
+            search: Browser.topWindow.location.search,
+            secure: Browser.getProtocol() === 'https:' ? 1 : 0,
+            referrer: Browser.getReferrer(),
+            ua: Browser.getUserAgent(),
+            deviceOs: __getOsVersion(),
+            isMobile: __isMobile() ? 1 : 0,
+            dnt: __getDoNotTrack() ? 1 : 0,
+            adapterVersion: __adapterVersion,
+            adapterName: __adapterName
+        };
 
         /* ------------------------ Get consent information -------------------------
          * If you want to implement GDPR consent in your adapter, use the function
@@ -162,16 +286,20 @@ function BeachfrontHtb(configs) {
         var gdprStatus = ComplianceService.gdpr.getConsent();
         var privacyEnabled = ComplianceService.isPrivacyEnabled();
 
+        if (privacyEnabled) {
+            queryObj.gdpr = gdprStatus.applies ? 1 : 0;
+            queryObj.gdprConsent = gdprStatus.consentString;
+        }
+
         /* ---------------- Craft bid request using the above returnParcels --------- */
-
-        /* ------- Put GDPR consent code here if you are implementing GDPR ---------- */
-
-        /* -------------------------------------------------------------------------- */
 
         return {
             url: baseUrl,
             data: queryObj,
-            callbackId: callbackId
+            networkParamOverrides: {
+                method: 'POST',
+                contentType: 'text/plain'
+            }
         };
     }
 
@@ -186,11 +314,6 @@ function BeachfrontHtb(configs) {
      * If the endpoint does not have an appropriate field for this, set the profile's
      * callback type to CallbackTypes.CALLBACK_NAME and omit this function.
      */
-    function adResponseCallback(adResponse) {
-        /* Get callbackId from adResponse here */
-        var callbackId = 0;
-        __baseClass._adResponseStore[callbackId] = adResponse;
-    }
 
     /* -------------------------------------------------------------------------- */
 
@@ -205,14 +328,11 @@ function BeachfrontHtb(configs) {
 
     /**
      * This function will render the pixel given.
-     * @param  {string} pixelUrl Tracking pixel img url.
+     * @param {string} pixelUrl Tracking pixel iframe url.
      */
     function __renderPixel(pixelUrl) {
         if (pixelUrl) {
-            Network.img({
-                url: decodeURIComponent(pixelUrl),
-                method: 'GET'
-            });
+            Browser.createHiddenIFrame(pixelUrl);
         }
     }
 
@@ -246,12 +366,15 @@ function BeachfrontHtb(configs) {
          * Use the adResponse variable to extract your bid information and insert it into the
          * bids array. Each element in the bids array should represent a single bid and should
          * match up to a single element from the returnParcel array.
-         *
          */
 
-        /* ---------- Process adResponse and extract the bids into the bids array ------------ */
+        var bids = Utilities.isArray(adResponse) ? adResponse.filter(function (bid) {
+            return bid.adm;
+        }) : [];
 
-        var bids = adResponse;
+        var syncs = Utilities.isArray(adResponse) ? adResponse.filter(function (bid) {
+            return bid.sync;
+        }) : [];
 
         /* --------------------------------------------------------------------------------- */
 
@@ -266,15 +389,7 @@ function BeachfrontHtb(configs) {
             var curBid;
 
             for (var i = 0; i < bids.length; i++) {
-                /**
-                 * This section maps internal returnParcels and demand returned from the bid request.
-                 * In order to match them correctly, they must be matched via some criteria. This
-                 * is usually some sort of placements or inventory codes. Please replace the someCriteria
-                 * key to a key that represents the placement in the configuration and in the bid responses.
-                 */
-
-                /* ----------- Fill this out to find a matching bid for the current parcel ------------- */
-                if (curReturnParcel.xSlotRef.someCriteria === bids[i].someCriteria) {
+                if (curReturnParcel.xSlotName === bids[i].slot) {
                     curBid = bids[i];
                     bids.splice(i, 1);
 
@@ -292,16 +407,11 @@ function BeachfrontHtb(configs) {
                 continue;
             }
 
-            /* ---------- Fill the bid variables with data from the bid response here. ------------ */
-
-            /* Using the above variable, curBid, extract various information about the bid and assign it to
-             * these local variables */
-
             /* The bid price for the given slot */
             var bidPrice = curBid.price;
 
             /* The size of the given slot */
-            var bidSize = [Number(curBid.width), Number(curBid.height)];
+            var bidSize = [Number(curBid.w), Number(curBid.h)];
 
             /* The creative/adm for the given slot that will be rendered if is the winner.
              * Please make sure the URL is decoded and ready to be document.written.
@@ -318,14 +428,13 @@ function BeachfrontHtb(configs) {
             * If firing a tracking pixel is not required or the pixel url is part of the adm,
             * leave empty;
             */
-            var pixelUrl = '';
+            var pixelUrl = syncs.length > 0 ? syncs[0].sync : '';
 
             /* --------------------------------------------------------------------------------------- */
 
-            curBid = null;
             if (bidIsPass) {
                 //? if (DEBUG) {
-                Scribe.info(__profile.partnerId + ' returned pass for { id: ' + adResponse.id + ' }.');
+                Scribe.info(__profile.partnerId + ' returned pass for { id: ' + curBid.slot + ' }.');
                 //? }
                 if (__profile.enabledAnalytics.requestTime) {
                     __baseClass._emitStatsEvent(sessionId, 'hs_slot_pass', headerStatsInfo);
@@ -438,11 +547,11 @@ function BeachfrontHtb(configs) {
             },
 
             /* The bid price unit (in cents) the endpoint returns, please refer to the readme for details */
-            bidUnitInCents: 1,
+            bidUnitInCents: 100,
             lineItemType: Constants.LineItemTypes.ID_AND_SIZE,
-            callbackType: Partner.CallbackTypes.ID,
+            callbackType: Partner.CallbackTypes.NONE,
             architecture: Partner.Architectures.SRA,
-            requestType: Partner.RequestTypes.ANY
+            requestType: Partner.RequestTypes.AJAX
         };
 
         /* --------------------------------------------------------------------------------------- */
@@ -457,8 +566,7 @@ function BeachfrontHtb(configs) {
 
         __baseClass = Partner(__profile, configs, null, {
             parseResponse: __parseResponse,
-            generateRequestObj: __generateRequestObj,
-            adResponseCallback: adResponseCallback
+            generateRequestObj: __generateRequestObj
         });
     })();
 
@@ -490,8 +598,7 @@ function BeachfrontHtb(configs) {
 
         //? if (TEST) {
         parseResponse: __parseResponse,
-        generateRequestObj: __generateRequestObj,
-        adResponseCallback: adResponseCallback
+        generateRequestObj: __generateRequestObj
         //? }
     };
 

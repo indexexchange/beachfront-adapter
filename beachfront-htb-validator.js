@@ -29,9 +29,24 @@ function partnerValidator(configs) {
                     '*': {
                         type: 'object',
                         properties: {
-                            placementId: {
+                            appId: {
                                 type: 'string',
                                 minLength: 1
+                            },
+                            bidfloor: {
+                                type: 'number',
+                                gt: 0
+                            },
+                            sizes: {
+                                type: 'array',
+                                minLength: 1,
+                                items: {
+                                    type: 'array',
+                                    exactLength: 2,
+                                    items: {
+                                        type: 'integer'
+                                    }
+                                }
                             }
                         }
                     }
